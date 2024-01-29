@@ -40,6 +40,12 @@ if(QEMU)
   list(APPEND uv_defines __QEMU__=1)
 endif()
 
+if (CMAKE_C_COMPILER_ID MATCHES MSVC)
+	set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} /W0 /Zi /Od /Ob0 /MP /MTd")
+	set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} /W0 /O2 /Ob2 /Oi /Ot /Oy /MP /MT /GL /GS /guard:cf")
+	set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} /W0 /Ob1 /Ot /Zi /MP /MT")
+endif()
+
 # Note: these are mutually exclusive.
 option(ASAN "Enable AddressSanitizer (ASan)" OFF)
 option(MSAN "Enable MemorySanitizer (MSan)" OFF)
@@ -50,7 +56,7 @@ if(MSAN AND NOT CMAKE_C_COMPILER_ID MATCHES "AppleClang|Clang")
   message(SEND_ERROR "MemorySanitizer requires clang. Try again with -DCMAKE_C_COMPILER=clang")
 endif()
 
-if(ASAN)
+if(ASAN OR DEV_WITH_ASAN)
   list(APPEND uv_defines __ASAN__=1)
   if(CMAKE_C_COMPILER_ID MATCHES "AppleClang|GNU|Clang")
     set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-omit-frame-pointer -fsanitize=address")
@@ -149,7 +155,7 @@ string(CONCAT lint-default $<
 >)
 set(lint-utf8-msvc $<$<BOOL:${UV_LINT_UTF8_MSVC}>:/utf-8>)
 
-list(APPEND uv_cflags ${lint-strict-prototypes} ${lint-extra} ${lint-default} ${lint-w4})
+list(APPEND uv_cflags ${lint-strict-prototypes} ${lint-extra} ${lint-default})
 list(APPEND uv_cflags ${lint-no-unused-parameter})
 list(APPEND uv_cflags ${lint-no-unused-parameter-msvc})
 list(APPEND uv_cflags ${lint-no-conditional-constant-msvc})
@@ -187,7 +193,7 @@ set(uv_sources
     src/version.c)
 
 if(WIN32)
-  list(APPEND uv_defines WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0A00 _CRT_DECLARE_NONSTDC_NAMES=0)
+  list(APPEND uv_defines WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0600 _CRT_DECLARE_NONSTDC_NAMES=0)
   list(APPEND uv_libraries
        psapi
        user32
