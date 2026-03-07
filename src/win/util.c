@@ -625,9 +625,11 @@ int uv_cpu_info(uv_cpu_info_t** cpu_infos_ptr, int* cpu_count_ptr) {
     cpu_info->cpu_times.irq = sppi[i].InterruptTime.QuadPart / 10000;
     cpu_info->cpu_times.nice = 0;
 
+    char* model = NULL;
     uv__convert_utf16_to_utf8(cpu_brand,
                               cpu_brand_size / sizeof(WCHAR),
-                              &(cpu_info->model));
+                              &model);
+    cpu_info->model = model;
   }
 
   uv__free(sppi);
